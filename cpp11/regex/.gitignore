@@ -1,0 +1,5 @@
+*.o
+gcm.cache
+regex
+regex2
+*.swp

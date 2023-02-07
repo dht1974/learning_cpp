@@ -1,0 +1,21 @@
+https://zhuanlan.zhihu.com/p/264573010
+
+1. https://wandbox.org/ 
+支持多种编程语言 * 多个编译器版本在线编译运行的网站。
+可以在这里做方便、快速地一些小实验、尝试一些编程语言的新特性，比如 C++20。
+
+2. https://quick-bench.com/
+可以快速对一些 C++ 代码片段进行 benchmark 并可视化显示出来。
+支持多个版本的 clang 和 gcc。
+背后用的应该是 google benchmark 这个开源库，你也可以在自己的机器上安装这个库。
+
+3. https://gcc.godbolt.org/
+支持将 C++ 代码编译成汇编代码。
+支持多种编译器版本 * 多种 CPU 平台（x86-64、MIPS、ARM 等）。
+
+4. https://build-bench.com/ 
+可以测试、比较不同 C++ 代码的编译开销（CPU、内存、I/O）
+
+5. https://cppinsights.io/
+主要用于看代码编译展开后的具体情况，是个学习 C++ 模板时不错的辅助工具。
+
