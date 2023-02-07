@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <map>
 
 struct AAA 
 {
@@ -59,5 +60,13 @@ main ()
     v.emplace_back (10);
     /// 多加入一个，在vector析构时，会多打一条析构信息
     v.emplace_back (11);
+    std::cout << "-----------------------" << std::endl;
+
+    /// map 和 unordered_map 才有try_emplace
+    std::cout << "------- try_emplace_back -------" << std::endl;
+    std::map<int, AAA> m {
+        {1, {11}}, {2, {22}}, {3, {33}}
+    };
+    m.try_emplace (4, 44);
     std::cout << "-----------------------" << std::endl;
 }
