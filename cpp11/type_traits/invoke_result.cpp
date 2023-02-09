@@ -97,6 +97,8 @@ main ()
     std::cout << abc << std::endl;
 
     std::invoke_result <decltype ([]()->int { return 0;})>::type def;
+    using return_t = std::invoke_result <decltype ([]()->int { return 0;})>::type;
+    static_assert (std::is_integral_v <return_t>);
     def = 1000;
     std::cout << def << std::endl;
 
