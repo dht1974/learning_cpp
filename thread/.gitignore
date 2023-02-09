@@ -11,3 +11,4 @@ atomic_ref
 promise
 semaphore
 shared_mutex
+thread_local

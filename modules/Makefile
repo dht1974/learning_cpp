@@ -1,6 +1,9 @@
 CPPFLAGS=-fmodules-ts -std=c++20 -g -Wall -Wextra
 
-all: 01 m02
+all: prebuild m02
+
+prebuild:
+	-@ln -s ../gcm.cache 2>/dev/null
 
 m02: m02_interface.cpp m02_impl_aaa.cpp m02_impl_ccc.cpp m02.cpp
 	g++ ${CPPFLAGS} -c m02_interface.cpp
