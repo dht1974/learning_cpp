@@ -33,15 +33,17 @@ namespace m02
     export class BBB
     {
     public:
-        virtual ~BBB ()
+        ~BBB ()
         {}
         
-        virtual int lag (std::vector<int>& v, int lag) = 0;
+        /// 目前看多态支持还是有问题，在链接时报错
+        /// virtual int lag (std::vector<int>& v, int lag) = 0;
+        int lag (std::vector<int>& v, int lag);
     };
 
     export class CCC : public BBB
     {
     public:
-        virtual int lag (std::vector<int>& v, int lag);
+        int lag (std::vector<int>& v, int lag);
     };
 }
