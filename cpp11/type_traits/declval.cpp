@@ -28,5 +28,6 @@ main ()
 
     /// 注意 bar () 并没有函数体，也不影响
     decltype(std::declval<AAA> ().bar ()) b = 100;
+    static_assert (std::is_floating_point_v<decltype(std::declval<AAA> ().bar ())>);
     std::cout << b << std::endl;
 }
