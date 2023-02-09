@@ -1,5 +1,7 @@
 #include <iostream>
 
+/// CPO（customization point object）
+
 namespace thirdparty 
 {
     struct complicated_structure 
