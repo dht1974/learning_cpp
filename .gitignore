@@ -1,0 +1,6 @@
+gcm.cache
+*.swp
+*.o
+core.[0-9]*
+*.a
+*.so
