@@ -7,6 +7,14 @@
 #include <numeric>
 #include <cstdarg>
 
+/*
+ 部分专家观点：
+ async/future/promise 模型则很低效，而且很难让用户正确使用，并且严重缺乏对泛型的支持
+
+ 我的观点：
+ async 启动一个线程，代价比较大，如果用于大批量长时间的工作，使用没问题，如果是小任务
+ 有点得不偿失，关键看应用场景，不能一概否定
+*/
 int foo (int a, int b)
 {
     std::this_thread::sleep_for (std::chrono::seconds (3));
