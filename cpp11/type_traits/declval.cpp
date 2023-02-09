@@ -24,6 +24,7 @@ int
 main ()
 {
     decltype(std::declval<AAA> ().foo (1, 1)) a = 10;
+    static_assert (std::is_integral_v<decltype(std::declval<AAA> ().foo (3, 3))>);
     std::cout << a << std::endl;
 
     /// 注意 bar () 并没有函数体，也不影响
