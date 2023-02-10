@@ -21,6 +21,6 @@ main ()
 
     std::cout << "erase: \n"; 
     /// std::remove (std::erase (v.begin (), v.end (), 1), v.end ());
-    std::erase (v.begin (), v.end (), 1);
+    std::erase (v, 1);
     info (v);
 }
