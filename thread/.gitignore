@@ -13,3 +13,4 @@ semaphore
 shared_mutex
 thread_local
 async
+scoped_locking
