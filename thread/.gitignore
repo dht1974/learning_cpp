@@ -14,3 +14,4 @@ shared_mutex
 thread_local
 async
 scoped_locking
+call_once
