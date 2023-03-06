@@ -53,6 +53,12 @@ void helper2 (Args&&... args)
     static_assert ((std::is_integral_v<Args>&&...), "not a integral");
 }
 
+template<typename... Args>
+void show_args (Args&& ... args)
+{
+    (std::cout << ... << args) << std::endl;
+}
+
 int
 main ()
 {
@@ -68,4 +74,6 @@ main ()
     helper (1);
     helper2 (1, 2, 3, 4, 5);
     /// helper2 ("1"); /// 编译错误，不是整形
+
+    show_args (1, 2.0, "hello", std::string ("world"), 'c');
 }
