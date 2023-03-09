@@ -87,11 +87,10 @@ struct circle_buffer2 {
     if (nextRecord == size_) {
       nextRecord = 0;
     }
-    /// rmb ();
     if (nextRecord != readIndex_) {
       new (&records_[currentWrite]) T(std::forward<Args>(recordArgs)...);
       writeIndex_ = nextRecord;
-      rmb ();
+      /// wmb ();
       return true;
     }
 
@@ -102,7 +101,6 @@ struct circle_buffer2 {
   // move (or copy) the value at the front of the queue to given variable
   bool read(T& record) {
     auto const currentRead = readIndex_;
-    /// wmb ();
     if (currentRead == writeIndex_) {
       // queue is empty
       return false;
@@ -115,7 +113,7 @@ struct circle_buffer2 {
     record = std::move(records_[currentRead]);
     records_[currentRead].~T();
     readIndex_ = nextRecord;
-    wmb ();
+    /// rmb ();
     return true;
   }
 
@@ -145,10 +143,12 @@ struct circle_buffer2 {
   }
 
   bool isEmpty() const {
+      wmb ();
     return readIndex_ == writeIndex_;
   }
 
   bool isFull() const {
+    wmb ();
     auto nextRecord = writeIndex_ + 1;
     if (nextRecord == size_) {
       nextRecord = 0;
@@ -158,7 +158,7 @@ struct circle_buffer2 {
     }
     // queue is full
     return true;
-  }
+  } 
 
   // * If called by consumer, then true size may be more (because producer may
   //   be adding items concurrently).

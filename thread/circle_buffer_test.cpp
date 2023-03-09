@@ -1,7 +1,5 @@
-#include "circle_buffer2.h"
 #include <thread>
 
-/// 测试facebook folly的无锁队列
 struct AAA
 {
     uint64_t a;
@@ -13,8 +11,15 @@ struct AAA
     }
 };
 
-/// folly::circle_buffer<AAA> que (4096);
-folly::circle_buffer2<AAA> que (4096);
+#if 1
+#include "circle_buffer2.h"
+folly::circle_buffer2<AAA> que (4096 * 64);
+#else
+#include "circle_buffer.h"
+folly::circle_buffer<AAA> que (4096);
+#endif
+/// 测试facebook folly的无锁队列
+
 
 void t1_fun ()
 {
@@ -41,10 +46,10 @@ void t2_fun ()
                     exit (-1);
                 }
 
-                if (aa.a >= 500000000) {
+                if (aa.a >= 100000000) {
                     exit (0);
                 }
-                if (aa.a % 100== 0) {
+                if (aa.a % 10000000 == 0) {
                     printf ("%lu\n", aa.a);
                 }
                 ++i;
