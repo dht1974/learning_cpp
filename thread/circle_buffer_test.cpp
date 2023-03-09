@@ -1,4 +1,4 @@
-#include "circle_buffer.h"
+#include "circle_buffer2.h"
 #include <thread>
 
 /// 测试facebook folly的无锁队列
@@ -13,7 +13,8 @@ struct AAA
     }
 };
 
-folly::circle_buffer<AAA> que (4096);
+/// folly::circle_buffer<AAA> que (4096);
+folly::circle_buffer2<AAA> que (4096);
 
 void t1_fun ()
 {
@@ -22,6 +23,8 @@ void t1_fun ()
         if (que.isFull () == false) {
             que.write (i, i);
             ++i;
+        } else {
+            /// printf ("full\n");
         }
     }
 }
@@ -35,9 +38,21 @@ void t2_fun ()
             if (que.read (aa) == true) {
                 if (aa.a != i) {
                     printf ("err.\n");
+                    exit (-1);
+                }
+
+                if (aa.a >= 500000000) {
+                    exit (0);
+                }
+                if (aa.a % 100== 0) {
+                    printf ("%lu\n", aa.a);
                 }
                 ++i;
-            } 
+            } else {
+                printf ("read err\n");
+            }
+        } else {
+            /// printf ("empty\n");
         }
     }
 }
