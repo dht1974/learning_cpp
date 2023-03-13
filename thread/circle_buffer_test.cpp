@@ -11,12 +11,12 @@ struct AAA
     }
 };
 
-#if 1
+#if 0
 #include "circle_buffer2.h"
 folly::circle_buffer2<AAA> que (4096 * 64);
 #else
 #include "circle_buffer.h"
-folly::circle_buffer<AAA> que (4096);
+folly::circle_buffer<AAA> que (512);
 #endif
 /// 测试facebook folly的无锁队列
 
@@ -47,6 +47,7 @@ void t2_fun ()
                 }
 
                 if (aa.a >= 100000000) {
+                    /// printf ("ridx: %zu, widx: %zu\n", que.get_read_index (), que.get_write_index ());
                     exit (0);
                 }
                 if (aa.a % 10000000 == 0) {

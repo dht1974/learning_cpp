@@ -27,32 +27,27 @@
 #include <type_traits>
 #include <utility>
 
-/// 使用barrier替代atomic，目前正确性还不确定
-
-#define mb()  asm volatile("mfence":::"memory")
-#define rmb() asm volatile("lfence":::"memory")
-#define wmb() asm volatile("sfence" ::: "memory")
-
+/// 还有bug
 
 namespace folly {
 
 /*
- * circle_buffer2 is a one producer and one consumer queue
+ * circle_buffer is a one producer and one consumer queue
  * without locks.
  */
 template <class T>
-struct circle_buffer2 {
+struct circle_buffer {
   typedef T value_type;
 
-  circle_buffer2(const circle_buffer2&) = delete;
-  circle_buffer2& operator=(const circle_buffer2&) = delete;
+  circle_buffer(const circle_buffer&) = delete;
+  circle_buffer& operator=(const circle_buffer&) = delete;
 
   // size must be >= 2.
   //
   // Also, note that the number of usable slots in the queue at any
   // given time is actually (size-1), so if you start with an empty queue,
   // isFull() will return true after size-1 insertions.
-  explicit circle_buffer2(uint32_t size)
+  explicit circle_buffer(uint32_t size)
       : size_(size),
         records_(static_cast<T*>(std::malloc(sizeof(T) * size))),
         readIndex_(0),
@@ -61,9 +56,13 @@ struct circle_buffer2 {
     if (!records_) {
       throw std::bad_alloc();
     }
+
+    if (std::has_single_bit (size) == false) {
+        throw std::invalid_argument ("size is not powof2");
+    }
   }
 
-  ~circle_buffer2() {
+  ~circle_buffer() {
     // We need to destruct anything that may still exist in our queue.
     // (No real synchronization needed at destructor time: only one
     // thread can be doing this.)
@@ -83,16 +82,14 @@ struct circle_buffer2 {
 
   template <class... Args>
   bool write(Args&&... recordArgs) {
-    auto const currentWrite = writeIndex_;
+    auto const currentWrite = writeIndex_.load(std::memory_order_acquire);
     auto nextRecord = currentWrite + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-    if (nextRecord != readIndex_) {
-      new (&records_[currentWrite]) T(std::forward<Args>(recordArgs)...);
-      writeIndex_ = nextRecord;
-      wmb ();
-      return true;
+    if (nextRecord != readIndex_.load(std::memory_order_acquire)) {
+        auto write_idx = (currentWrite & (size_ - 1));
+        printf ("[%zu, %zu], widx: %zu\n", get_read_index (), get_write_index (), write_idx);
+        new (&records_[write_idx]) T(std::forward<Args>(recordArgs)...);
+        writeIndex_.store(nextRecord, std::memory_order_release);
+        return true;
     }
 
     // queue is full
@@ -101,28 +98,26 @@ struct circle_buffer2 {
 
   // move (or copy) the value at the front of the queue to given variable
   bool read(T& record) {
-    auto const currentRead = readIndex_;
-    if (currentRead == writeIndex_) {
+    auto const currentRead = readIndex_.load(std::memory_order_acquire);
+    if (currentRead == writeIndex_.load(std::memory_order_acquire)) {
       // queue is empty
       return false;
     }
 
     auto nextRecord = currentRead + 1;
-    if (nextRecord == size_) {
-      nextRecord = 0;
-    }
-    record = std::move(records_[currentRead]);
-    records_[currentRead].~T();
-    readIndex_ = nextRecord;
-    rmb ();
+    auto read_idx = currentRead & (size_ - 1);
+    printf ("[%zu, %zu], ridx: %zu\n", get_read_index (), get_write_index (), read_idx);
+    record = std::move(records_[read_idx]);
+    records_[read_idx].~T();
+    readIndex_.store(nextRecord, std::memory_order_release);
     return true;
   }
 
   // pointer to the value at the front of the queue (for use in-place) or
   // nullptr if empty.
   T* frontPtr() {
-    auto const currentRead = readIndex_;
-    if (currentRead == writeIndex_) {
+    auto const currentRead = readIndex_.load(std::memory_order_relaxed);
+    if (currentRead == writeIndex_.load(std::memory_order_acquire)) {
       // queue is empty
       return nullptr;
     }
@@ -131,35 +126,33 @@ struct circle_buffer2 {
 
   // queue must not be empty
   void popFront() {
-    auto const currentRead = readIndex_;
-    assert(currentRead != writeIndex_);
+    auto const currentRead = readIndex_.load(std::memory_order_relaxed);
+    assert(currentRead != writeIndex_.load(std::memory_order_acquire));
 
     auto nextRecord = currentRead + 1;
     if (nextRecord == size_) {
       nextRecord = 0;
     }
     records_[currentRead].~T();
-    readIndex_ = nextRecord;
-
+    readIndex_.store(nextRecord, std::memory_order_release);
   }
 
   bool isEmpty() const {
-      wmb ();
-    return readIndex_ == writeIndex_;
+    return readIndex_.load(std::memory_order_acquire) ==
+        writeIndex_.load(std::memory_order_acquire);
   }
 
   bool isFull() const {
-    wmb ();
-    auto nextRecord = writeIndex_ + 1;
+    auto nextRecord = writeIndex_.load(std::memory_order_acquire) + 1;
     if (nextRecord == size_) {
       nextRecord = 0;
     }
-    if (nextRecord != readIndex_) {
+    if (nextRecord != readIndex_.load(std::memory_order_acquire)) {
       return false;
     }
     // queue is full
     return true;
-  } 
+  }
 
   // * If called by consumer, then true size may be more (because producer may
   //   be adding items concurrently).
@@ -167,7 +160,8 @@ struct circle_buffer2 {
   //   be removing items concurrently).
   // * It is undefined to call this from any other thread.
   size_t sizeGuess() const {
-    int ret = writeIndex_ - readIndex_;
+    int ret = writeIndex_.load(std::memory_order_acquire) -
+        readIndex_.load(std::memory_order_acquire);
     if (ret < 0) {
       ret += size_;
     }
@@ -177,9 +171,18 @@ struct circle_buffer2 {
   // maximum number of items in the queue.
   size_t capacity() const { return size_ - 1; }
 
+  size_t get_read_index ()
+  {
+    return readIndex_.load (std::memory_order_acquire);
+  }
+
+  size_t get_write_index ()
+  {
+    return writeIndex_.load (std::memory_order_acquire);
+  }
+
  private:
-  /// using AtomicIndex = std::atomic<unsigned int>;
-  using AtomicIndex = uint64_t;
+  using AtomicIndex = std::atomic<size_t>;
   char pad0_[64];
   const uint32_t size_;
   T* const records_;
