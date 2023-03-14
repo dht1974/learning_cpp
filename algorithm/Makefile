@@ -1,7 +1,7 @@
 #CPPFLAGS=-fmodules-ts -std=c++20 -g -Wall -Wextra
 CPPFLAGS= -std=c++20 -g -Wall -Wextra
 
-BIN = all_none_any_of erase numeric
+BIN = all_none_any_of erase numeric iota
 all: prebuild ${BIN}
 
 prebuild:
