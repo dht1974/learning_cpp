@@ -22,9 +22,10 @@ main ()
 
     display (m);
 
-    for (auto iter = m.rbegin (); iter != m.rend ();) {
+    printf ("====================\n");
+    for (auto iter = m.begin (); iter != m.end ();) {
         if ((iter->first % 2) == 0) {
-            m.erase ((++iter).base ());
+            m.erase (iter++);
         } else {
             iter->second += 10;
             ++iter;

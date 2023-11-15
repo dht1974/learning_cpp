@@ -36,7 +36,8 @@ main ()
     std::vector<std::string_view> vec;
     vec.reserve (64);
 
-    std::string_view sv (str.c_str (), str.size ());
+    /// std::string_view sv (str.c_str (), str.size ());
+    std::string_view sv (str, str.size ());
     split_to_vector (sv, vec);
 
     for (size_t i = 0; i < vec.size (); ++i) {

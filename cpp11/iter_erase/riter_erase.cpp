@@ -22,24 +22,16 @@ main ()
 
     display (m);
 
+    printf ("===============\n");
     std::map<int, int>::reverse_iterator rit;  
     for (rit = m.rbegin(); rit != m.rend();)  {  
         if (0 == rit->first % 2) {  
             rit = decltype (rit)(m.erase (std::next (rit).base ()));
         } else {  
+            rit->second += 10;
             ++rit;  
         }  
     }  
 
-#if 0
-    for (auto iter = m.rbegin (); iter != m.rend ();) {
-        if ((iter->first % 2) == 0) {
-            m.erase ((++iter).base ());
-        } else {
-            iter->second += 10;
-            ++iter;
-        }
-    }
-#endif
     display (m);
 }
